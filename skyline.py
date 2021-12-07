@@ -6,6 +6,7 @@ import plotly.express as px
 import base64
 import re
 import os
+from os.path import isfile
 # pip install -U kaleido
 
 
@@ -120,16 +121,24 @@ def get_skyline(encoded_image, encoded_mask):
 
     with open("skyline.png", "rb") as img_file:
         skyline_b64_bytes = base64.b64encode(img_file.read())
-        
-        # Decode image data from bytes to string
+
+        ### Decode image data from bytes to string
         skyline_b64_string = skyline_b64_bytes.decode()
 
-        # Format the base64 image to a data-uri format usable in html/css
-        skyline_b64_string = 'data:image/png;base64,{}'.format(skyline_b64_string)
+        ### Format the base64 image to a data-uri format usable in html/css
+        skyline_b64_string = 'data:image/png;base64,{}'.format(
+            skyline_b64_string)
 
-    # Remove temp image files
-    os.remove('image.png')
-    os.remove('masks.png')
-    os.remove('skyline.png')
+    # *****************************************
+    # ****** Remove temp image files
+    # *****************************************
+    if isfile('image.png'):
+        os.remove('image.png')
+
+    if isfile('masks.png'):
+        os.remove('masks.png')
+
+    if isfile('skyline.png'):
+        os.remove('skyline.png')
 
     return skyline_b64_string
