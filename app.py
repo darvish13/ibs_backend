@@ -32,3 +32,7 @@ def getSkyline():
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+# pip install pyopenssl
+# app.run(ssl_context=('cert.pem', 'key.pem'))
+# flask run --host=0.0.0.0 --port=5000 --cert=adhoc || --cert=cert.pem --key=key.pem
