@@ -18,7 +18,7 @@ def myRange(start, end, step):
     yield end
 
 
-def get_skyline(encoded_image, encoded_mask):
+def get_skyline(encoded_image, encoded_mask, alpha=100, beta=40):
     base64_image = re.sub('^data:image/.+;base64,', '', encoded_image)
 
     with open("image.png", "wb") as fh:
@@ -89,8 +89,11 @@ def get_skyline(encoded_image, encoded_mask):
     # center_azimuth=100 #alpha
     # center_elevation=40 #beta
 
-    center_azimuth=(np.int(np.round(np.float(data['sensors'][0]['orientation']['alpha'])))-90)%360
-    center_elevation=np.int(np.round(np.float(data['sensors'][0]['orientation']['beta'])))-90
+    # center_azimuth=(np.int(np.round(np.float(data['sensors'][0]['orientation']['alpha'])))-90)%360
+    # center_elevation=np.int(np.round(np.float(data['sensors'][0]['orientation']['beta'])))-90
+
+    center_azimuth=(alpha-90)%360
+    center_elevation=(beta-90)%91
 
     skyline_whole=np.zeros([91*3,360*3])
     skyline_whole[91+ center_elevation - np.int(np.floor(group.shape[0]/2)) : 91+ center_elevation + np.int(np.ceil(group.shape[0]/2)) , 
