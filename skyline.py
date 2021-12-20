@@ -92,8 +92,8 @@ def get_skyline(encoded_image, encoded_mask, alpha=100, beta=40):
     # center_azimuth=(np.int(np.round(np.float(data['sensors'][0]['orientation']['alpha'])))-90)%360
     # center_elevation=np.int(np.round(np.float(data['sensors'][0]['orientation']['beta'])))-90
 
-    center_azimuth=(alpha-90)%360
-    center_elevation=(beta-90)%91
+    center_azimuth=(np.int(np.round(alpha))-90)%360
+    center_elevation=(np.int(np.round(beta))-90)%91
 
     skyline_whole=np.zeros([91*3,360*3])
     skyline_whole[91+ center_elevation - np.int(np.floor(group.shape[0]/2)) : 91+ center_elevation + np.int(np.ceil(group.shape[0]/2)) , 
