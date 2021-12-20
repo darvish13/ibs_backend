@@ -3,12 +3,12 @@ import numpy as np
 import pandas as pd
 import numpy.matlib
 import plotly.express as px
+import pymongo
 import base64
 import re
+import plotly.graph_objects as go
+import json
 import os
-from os.path import isfile
-# pip install -U kaleido
-
 
 def myRange(start, end, step):
     i = start
@@ -19,7 +19,6 @@ def myRange(start, end, step):
 
 
 def get_skyline(encoded_image, encoded_mask):
-    # encoded_image=data['sensors'][0]['image']
     base64_image = re.sub('^data:image/.+;base64,', '', encoded_image)
 
     with open("image.png", "wb") as fh:
@@ -27,7 +26,6 @@ def get_skyline(encoded_image, encoded_mask):
 
     decoded_image = np.asarray(Image.open("image.png"))
 
-    # encoded_mask=data['sensors'][0]['png']
     base64_mask = re.sub('^data:image/.+;base64,', '', encoded_mask)
     with open("masks.png", "wb") as fh:
         fh.write(base64.b64decode(base64_mask))
@@ -88,33 +86,46 @@ def get_skyline(encoded_image, encoded_mask):
             else:
                 group[i, j] = 0
 
-    center_azimuth = 100  # alpha
-    center_elevation = 40  # beta
+    # center_azimuth=100 #alpha
+    # center_elevation=40 #beta
 
-    # center_azimuth=np.int(np.round(np.float(data['sensors'][1]['orientation']['alpha'])))
-    # center_elevation=np.int(np.round(np.float(data['sensors'][1]['orientation']['beta'])))
+    center_azimuth=(np.int(np.round(np.float(data['sensors'][0]['orientation']['alpha'])))-90)%360
+    center_elevation=np.int(np.round(np.float(data['sensors'][0]['orientation']['beta'])))-90
 
-    skyline = np.zeros([91, 360])
-    skyline[center_elevation - np.int(np.floor(group.shape[0]/2)): center_elevation + np.int(np.ceil(group.shape[0]/2)),
-            center_azimuth - np.int(np.floor(group.shape[1]/2)): center_azimuth + np.int(np.ceil(group.shape[1]/2))] = np.flip(group, (0))
+    skyline_whole=np.zeros([91*3,360*3])
+    skyline_whole[91+ center_elevation - np.int(np.floor(group.shape[0]/2)) : 91+ center_elevation + np.int(np.ceil(group.shape[0]/2)) , 
+            360+ center_azimuth   - np.int(np.floor(group.shape[1]/2)) : 360+ center_azimuth   + np.int(np.ceil(group.shape[1]/2))] = np.flip(group,(0))
 
-    skyline = skyline.transpose()
-    skyline_dict = {}
+    skyline=np.zeros([91,360])
 
+    for i in range(3):
+      for j in range(3):
+        skyline=skyline + skyline_whole[i*91:(i+1)*91 , j*360:(j+1)*360]
+
+    skyline=(skyline > 0).astype(int)
+    skyline=skyline.transpose()
+
+    skyline_dict = {float(k): [] for k in range(360)}
     for i in range(len(skyline)):
-        skyline_dict[i] = skyline[i]
-    # print(skyline_dict)
+      skyline_dict[i] = skyline[i].tolist()
+    # out_file = open("skyline_dict.json", "w")
+    # json.dump(skyline_dict , out_file)
+    # out_file.close()
 
-    azimuth_series = pd.Series(
-        np.repeat(np.array(range(360)), 91), dtype='int16')
-    elevation_series = pd.Series(numpy.matlib.repmat(
-        np.array(range(91)), 1, 360)[0], dtype='int8')
-    skyline_series = pd.Series([item for sublist in list(
-        skyline) for item in sublist], dtype='int8')
+    # skyline_dict2 = {str(float(k)): [] for k in range(360)}
+    # for i in range(len(skyline)):
+    #   skyline_dict2[str(float(i))] = skyline[i].tolist()
+    # out_file = open("skyline_dict.json", "w")
+    # json.dump(skyline_dict2 , out_file)
+    # out_file.close()
 
-    skyline_df = pd.DataFrame({'azimuth': azimuth_series,
-                               'elevation': elevation_series,
-                               'skyline': skyline_series})
+    azimuth_series=pd.Series(np.repeat(np.array(range(360)),91), dtype='int16')
+    elevation_series=pd.Series(numpy.matlib.repmat(np.array(range(91)),1,360)[0], dtype='int8')
+    skyline_series=pd.Series([item for sublist in list(skyline) for item in sublist], dtype='int8')
+
+    skyline_df=pd.DataFrame({ 'azimuth': azimuth_series,
+                              'elevation': elevation_series,
+                              'skyline': skyline_series})
 
     fig = px.scatter(skyline_df, x="azimuth", y="elevation", color="skyline")
     fig.write_image("skyline.png")
@@ -132,13 +143,15 @@ def get_skyline(encoded_image, encoded_mask):
     # *****************************************
     # ****** Remove temp image files
     # *****************************************
-    if isfile('image.png'):
+    if os.path.isfile('image.png'):
         os.remove('image.png')
 
-    if isfile('masks.png'):
+    if os.path.isfile('masks.png'):
         os.remove('masks.png')
 
-    if isfile('skyline.png'):
+    if os.path.isfile('skyline.png'):
         os.remove('skyline.png')
 
-    return skyline_b64_string
+    return_dict={'skyline_b64':skyline_b64_string, 'skyline_dict':skyline_dict}
+
+    return return_dict
