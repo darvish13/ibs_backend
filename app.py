@@ -23,10 +23,10 @@ def index():
 @app.post('/get-skyline')
 def getSkyline():
 
-    # Destructure image and mask from request data
-    image, mask = request.json['image'], request.json['mask']
+    # Destructure image, mask, alpha, beta from request data
+    image, mask, alpha, beta = request.json['image'], request.json['mask'], request.json['alpha'], request.json['beta']
 
-    skyline = get_skyline(image, mask)
+    skyline = get_skyline(image, mask, alpha, beta)
     return skyline, 200
 
 
