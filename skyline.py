@@ -97,15 +97,14 @@ def get_skyline(encoded_image, encoded_mask, alpha=100, beta=40):
     center_azimuth=(180 - np.int(np.round(alpha)))%360
     center_elevation=np.int(np.round(beta))-90
 
-    skyline_whole=np.zeros([91*3,360*3])
-    skyline_whole[91+ center_elevation - np.int(np.floor(group.shape[0]/2)) : 91+ center_elevation + np.int(np.ceil(group.shape[0]/2)) , 
+    skyline_whole=np.zeros([91,360*3])
+    skyline_whole[center_elevation - np.int(np.floor(group.shape[0]/2)) : center_elevation + np.int(np.ceil(group.shape[0]/2)) , 
             360+ center_azimuth   - np.int(np.floor(group.shape[1]/2)) : 360+ center_azimuth   + np.int(np.ceil(group.shape[1]/2))] = np.flip(group,(0))
 
     skyline=np.zeros([91,360])
 
-    for i in range(3):
-      for j in range(3):
-        skyline=skyline + skyline_whole[i*91:(i+1)*91 , j*360:(j+1)*360]
+    for j in range(3):
+        skyline=skyline + skyline_whole[ : , j*360:(j+1)*360]
 
     skyline=(skyline > 0).astype(int)
     skyline=skyline.transpose()
