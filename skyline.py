@@ -104,7 +104,7 @@ def get_skyline(encoded_image, encoded_mask, alpha=100, beta=40):
     skyline=np.zeros([91,360])
 
     for j in range(3):
-        skyline=skyline + skyline_whole[ : , j*360:(j+1)*360]
+        skyline=skyline + skyline_whole[:, j*360:(j+1)*360]
 
     skyline=(skyline > 0).astype(int)
     skyline=skyline.transpose()
